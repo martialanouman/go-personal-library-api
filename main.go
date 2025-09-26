@@ -10,10 +10,10 @@ import (
 
 func main() {
 	app, err := app.NewApplication()
-
 	if err != nil {
 		panic(err)
 	}
+	defer app.Db.Close()
 
 	r := routes.SetupRoutes(app)
 
