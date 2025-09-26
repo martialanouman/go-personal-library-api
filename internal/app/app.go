@@ -1,25 +1,31 @@
 package app
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/martialanouman/personal-library/internal/helpers"
+	"github.com/martialanouman/personal-library/internal/store"
 )
 
 type Application struct {
-	db     *sql.DB
+	Db     *pgxpool.Pool
 	Logger *log.Logger
 }
 
 func NewApplication() (*Application, error) {
 	logger := log.New(os.Stdout, "[APP]: ", log.Ldate|log.Ltime)
 
+	db, err := store.Open()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Application{
 		Logger: logger,
-		db:     nil,
+		Db:     db,
 	}, nil
 }
 
