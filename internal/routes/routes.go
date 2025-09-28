@@ -10,5 +10,10 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 
 	r.Get("/health", app.Health)
 
+	r.Route("/auth", func(r chi.Router) {
+		r.Post("/register", app.UserHandler.HandleRegisterUser)
+
+	})
+
 	return r
 }

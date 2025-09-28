@@ -6,13 +6,15 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/martialanouman/personal-library/internal/api"
 	"github.com/martialanouman/personal-library/internal/helpers"
 	"github.com/martialanouman/personal-library/internal/store"
 )
 
 type Application struct {
-	Db     *pgxpool.Pool
-	Logger *log.Logger
+	Db          *pgxpool.Pool
+	Logger      *log.Logger
+	UserHandler api.UserHandler
 }
 
 func NewApplication() (*Application, error) {
@@ -24,8 +26,9 @@ func NewApplication() (*Application, error) {
 	}
 
 	return &Application{
-		Logger: logger,
-		Db:     db,
+		Logger:      logger,
+		Db:          db,
+		UserHandler: api.NewUserHandler(store.NewPostgresUserStore(db), logger),
 	}, nil
 }
 
