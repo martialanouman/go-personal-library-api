@@ -36,6 +36,19 @@ func (p *password) Set(plaintext string) error {
 	return nil
 }
 
+func (p *password) Matches(plaintext string) (bool, error) {
+	if err := bcrypt.CompareHashAndPassword(p.hash, []byte(plaintext)); err != nil {
+		switch {
+		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
+			return false, nil
+		default:
+			return false, err
+		}
+	}
+
+	return true, nil
+}
+
 type UserStore interface {
 	CreateUser(user *User) error
 	GetUserByEmail(email string) (*User, error)

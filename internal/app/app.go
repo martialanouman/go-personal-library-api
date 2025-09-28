@@ -28,7 +28,7 @@ func NewApplication() (*Application, error) {
 	return &Application{
 		Logger:      logger,
 		Db:          db,
-		UserHandler: api.NewUserHandler(store.NewPostgresUserStore(db), logger),
+		UserHandler: api.NewUserHandler(store.NewPostgresUserStore(db), store.NewPostgresTokenStore(db), logger),
 	}, nil
 }
 

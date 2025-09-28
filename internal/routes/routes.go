@@ -12,7 +12,7 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", app.UserHandler.HandleRegisterUser)
-
+		r.Post("/login", app.UserHandler.HandleLogin)
 	})
 
 	return r

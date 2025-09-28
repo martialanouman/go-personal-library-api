@@ -16,8 +16,9 @@ const (
 )
 
 type UserHandler struct {
-	store  store.UserStore
-	logger *log.Logger
+	store      store.UserStore
+	tokenStore store.TokenStore
+	logger     *log.Logger
 }
 
 type registerUserRequest struct {
@@ -50,9 +51,27 @@ func (r *registerUserRequest) validate() error {
 	return nil
 }
 
-func NewUserHandler(store store.UserStore, logger *log.Logger) UserHandler {
+type loginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func (r *loginRequest) validate() error {
+	if r.Email == "" {
+		return errors.New("email is required")
+	}
+
+	if r.Password == "" {
+		return errors.New("password is required")
+	}
+
+	return nil
+}
+
+func NewUserHandler(store store.UserStore, tokenStore store.TokenStore, logger *log.Logger) UserHandler {
 	return UserHandler{
 		store,
+		tokenStore,
 		logger,
 	}
 }
@@ -101,4 +120,52 @@ func (h *UserHandler) HandleRegisterUser(w http.ResponseWriter, r *http.Request)
 	}
 
 	helpers.WriteJson(w, http.StatusCreated, helpers.Envelop{"user": user})
+}
+
+func (h *UserHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
+	var req loginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.logger.Printf("ERROR: decoding payload %v", err)
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.Envelop{"error": "invalid request payload"})
+		return
+	}
+
+	if err := req.validate(); err != nil {
+		h.logger.Printf("ERROR: validating payload %v", err)
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.Envelop{"error": err.Error()})
+		return
+	}
+
+	user, err := h.store.GetUserByEmail(req.Email)
+	if err != nil {
+		h.logger.Printf("ERROR: getting user by email %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	if user == nil {
+		helpers.WriteJson(w, http.StatusUnauthorized, helpers.Envelop{"error": "invalid email/password"})
+		return
+	}
+
+	ok, err := user.PasswordHash.Matches(req.Password)
+	if err != nil {
+		h.logger.Printf("ERROR: getting user by email %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	if !ok {
+		helpers.WriteJson(w, http.StatusUnauthorized, helpers.Envelop{"error": "invalid email/password"})
+		return
+	}
+
+	token := &store.Token{UserId: user.Id}
+	if err := h.tokenStore.CreateToken(token); err != nil {
+		h.logger.Printf("ERROR: creating token %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	helpers.WriteJson(w, http.StatusOK, helpers.Envelop{"auth_token": token})
 }
