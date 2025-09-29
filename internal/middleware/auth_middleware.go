@@ -68,7 +68,7 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 	})
 }
 
-func (m *AuthMiddleware) RequireUser(next http.Handler) http.Handler {
+func (m *AuthMiddleware) RequireUser(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := GetUser(r)
 		if user == store.AnonymousUser {
