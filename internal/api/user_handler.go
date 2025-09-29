@@ -8,6 +8,7 @@ import (
 	"regexp"
 
 	"github.com/martialanouman/personal-library/internal/helpers"
+	"github.com/martialanouman/personal-library/internal/middleware"
 	"github.com/martialanouman/personal-library/internal/store"
 )
 
@@ -168,4 +169,10 @@ func (h *UserHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	helpers.WriteJson(w, http.StatusOK, helpers.Envelop{"auth_token": token})
+}
+
+func (h *UserHandler) HandleMe(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+
+	helpers.WriteJson(w, http.StatusOK, helpers.Envelop{"me": user})
 }

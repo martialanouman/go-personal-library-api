@@ -16,6 +16,8 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 
 		r.Group(func(r chi.Router) {
 			r.Use(app.AuthMiddleware.Authenticate)
+
+			r.Get("/me", app.AuthMiddleware.RequireUser(app.UserHandler.HandleMe))
 		})
 	})
 
