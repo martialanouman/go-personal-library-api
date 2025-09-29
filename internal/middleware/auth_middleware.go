@@ -9,8 +9,8 @@ import (
 	"github.com/martialanouman/personal-library/internal/store"
 )
 
-type UserMiddlewares struct {
-	store store.UserStore
+type AuthMiddleware struct {
+	Store store.UserStore
 }
 
 type UserContextString string
@@ -34,7 +34,7 @@ func GetUser(r *http.Request) *store.User {
 	return user
 }
 
-func (m *UserMiddlewares) Authenticate(next http.Handler) http.Handler {
+func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Authorization")
 		authHeader := r.Header.Get("Authorization")
@@ -52,7 +52,7 @@ func (m *UserMiddlewares) Authenticate(next http.Handler) http.Handler {
 		}
 
 		token := headerParts[1]
-		user, err := m.store.GetUserByToken(token, store.ScopeAuth)
+		user, err := m.Store.GetUserByToken(token, store.ScopeAuth)
 		if err != nil {
 			helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
 			return
@@ -68,7 +68,7 @@ func (m *UserMiddlewares) Authenticate(next http.Handler) http.Handler {
 	})
 }
 
-func (m *UserMiddlewares) RequireUser(next http.Handler) http.Handler {
+func (m *AuthMiddleware) RequireUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := GetUser(r)
 		if user == store.AnonymousUser {
