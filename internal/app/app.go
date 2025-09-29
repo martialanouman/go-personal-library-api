@@ -8,13 +8,15 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/martialanouman/personal-library/internal/api"
 	"github.com/martialanouman/personal-library/internal/helpers"
+	"github.com/martialanouman/personal-library/internal/middleware"
 	"github.com/martialanouman/personal-library/internal/store"
 )
 
 type Application struct {
-	Db          *pgxpool.Pool
-	Logger      *log.Logger
-	UserHandler api.UserHandler
+	Db             *pgxpool.Pool
+	Logger         *log.Logger
+	UserHandler    api.UserHandler
+	AuthMiddleware middleware.AuthMiddleware
 }
 
 func NewApplication() (*Application, error) {
@@ -25,10 +27,13 @@ func NewApplication() (*Application, error) {
 		return nil, err
 	}
 
+	userStore := store.NewPostgresUserStore(db)
+
 	return &Application{
-		Logger:      logger,
-		Db:          db,
-		UserHandler: api.NewUserHandler(store.NewPostgresUserStore(db), store.NewPostgresTokenStore(db), logger),
+		Logger:         logger,
+		Db:             db,
+		UserHandler:    api.NewUserHandler(userStore, store.NewPostgresTokenStore(db), logger),
+		AuthMiddleware: middleware.AuthMiddleware{Store: userStore},
 	}, nil
 }
 
