@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"time"
 
@@ -23,6 +24,8 @@ type User struct {
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
+
+var AnonymousUser = &User{}
 
 func (p *password) Set(plaintext string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(plaintext), 12)
@@ -52,6 +55,7 @@ func (p *password) Matches(plaintext string) (bool, error) {
 type UserStore interface {
 	CreateUser(user *User) error
 	GetUserByEmail(email string) (*User, error)
+	GetUserByToken(token, scope string) (*User, error)
 }
 
 type PostgresUserStore struct {
@@ -121,6 +125,39 @@ func (s *PostgresUserStore) GetUserByEmail(email string) (*User, error) {
 		&user.Name,
 		&user.Email,
 		&user.PasswordHash.hash,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (s *PostgresUserStore) GetUserByToken(token, scope string) (*User, error) {
+	user := &User{
+		PasswordHash: password{},
+	}
+
+	query := `
+		SELECT u.id, u.name, u.email, u.created_at, u.updated_at
+		FROM users u
+		JOIN tokens t ON u.id = t.user_id
+		WHERE t.hash = $1 AND t.scope = $2 AND t.expiry > NOW()
+	`
+
+	hashedToken := sha256.Sum256([]byte(token))
+
+	err := s.db.QueryRow(context.Background(), query, hashedToken[:], scope).Scan(
+		&user.Id,
+		&user.Name,
+		&user.Email,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
