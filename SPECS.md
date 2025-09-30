@@ -14,7 +14,7 @@ Develop a RESTful API in Go allowing users to manage their personal book librari
 ### 1. **User Management**
 
 - [x] **Registration**: Account creation with email and password
-- [x] **Login**: Authentication with JWT token generation
+- [x] **Login**: Authentication with Bearer token generation
 - [ ] **User profile**: View and edit profile
 - [ ] **Password change**
 - [ ] **Logout**: Token invalidation
