@@ -69,6 +69,27 @@ func (r *loginRequest) validate() error {
 	return nil
 }
 
+type updatePasswordRequest struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
+}
+
+func (req *updatePasswordRequest) validate() error {
+	if req.CurrentPassword == "" {
+		return errors.New("current password is required")
+	}
+
+	if req.NewPassword == "" {
+		return errors.New("new password is required")
+	}
+
+	if len(req.NewPassword) < 8 {
+		return errors.New("new password must be at least 8 characters")
+	}
+
+	return nil
+}
+
 func NewUserHandler(store store.UserStore, tokenStore store.TokenStore, logger *log.Logger) UserHandler {
 	return UserHandler{
 		store,
@@ -175,4 +196,47 @@ func (h *UserHandler) HandleMe(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUser(r)
 
 	helpers.WriteJson(w, http.StatusOK, helpers.Envelop{"me": user})
+}
+
+func (h *UserHandler) HandleUpdatePassword(w http.ResponseWriter, r *http.Request) {
+	var req updatePasswordRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.logger.Printf("ERROR: decoding payload %v", err)
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.Envelop{"error": "invalid request payload"})
+		return
+	}
+
+	if err := req.validate(); err != nil {
+		h.logger.Printf("ERROR: validating payload %v", err)
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.Envelop{"error": err.Error()})
+		return
+	}
+
+	user := middleware.GetUser(r)
+	ok, err := user.PasswordHash.Matches(req.CurrentPassword)
+	if err != nil {
+		h.logger.Printf("ERROR: matching password %+v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	if !ok {
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.Envelop{"error": "invalid current password"})
+		return
+	}
+
+	if err := user.PasswordHash.Set(req.NewPassword); err != nil {
+		h.logger.Printf("ERROR: hashing password %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	if err := h.store.UpdatePassword(user); err != nil {
+		h.logger.Printf("ERROR: updating password %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
