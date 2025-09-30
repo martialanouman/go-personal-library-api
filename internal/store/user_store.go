@@ -56,6 +56,7 @@ type UserStore interface {
 	CreateUser(user *User) error
 	GetUserByEmail(email string) (*User, error)
 	GetUserByToken(token, scope string) (*User, error)
+	UpdatePassword(user *User) error
 }
 
 type PostgresUserStore struct {
@@ -146,8 +147,9 @@ func (s *PostgresUserStore) GetUserByToken(token, scope string) (*User, error) {
 	}
 
 	query := `
-		SELECT u.id, u.name, u.email, u.created_at, u.updated_at
+		SELECT u.id, u.name, u.email, u.created_at, u.updated_at, p.password_hash
 		FROM users u
+		JOIN passwords p ON u.id = p.user_id
 		JOIN tokens t ON u.id = t.user_id
 		WHERE t.hash = $1 AND t.scope = $2 AND t.expiry > NOW()
 	`
@@ -160,6 +162,7 @@ func (s *PostgresUserStore) GetUserByToken(token, scope string) (*User, error) {
 		&user.Email,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.PasswordHash.hash,
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -171,4 +174,19 @@ func (s *PostgresUserStore) GetUserByToken(token, scope string) (*User, error) {
 	}
 
 	return user, nil
+}
+
+func (s *PostgresUserStore) UpdatePassword(user *User) error {
+	query := `
+		UPDATE passwords
+		SET password_hash = $1
+		WHERE user_id = $2
+	`
+
+	_, err := s.db.Exec(context.Background(), query, user.PasswordHash.hash, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
