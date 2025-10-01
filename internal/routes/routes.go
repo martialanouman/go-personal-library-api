@@ -19,6 +19,7 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 
 			r.Get("/me", app.AuthMiddleware.RequireUser(app.UserHandler.HandleMe))
 			r.Put("/password", app.AuthMiddleware.RequireUser(app.UserHandler.HandleUpdatePassword))
+			r.Delete("/logout", app.AuthMiddleware.RequireUser(app.TokenHandler.HandleLogout))
 		})
 	})
 
