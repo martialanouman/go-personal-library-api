@@ -22,6 +22,7 @@ type Token struct {
 
 type TokenStore interface {
 	CreateToken(token *Token) error
+	RevokeAllTokens(userId, scope string) error
 }
 
 type PostgresTokenStore struct {
@@ -51,6 +52,20 @@ func (s *PostgresTokenStore) CreateToken(token *Token) error {
 	`
 
 	_, err = s.db.Exec(context.Background(), query, token.Hash, token.UserId, token.Expiry, token.Scope)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *PostgresTokenStore) RevokeAllTokens(userId, scope string) error {
+	query := `
+		DELETE FROM tokens
+		WHERE user_id = $1 AND scope LIKE '%' || $2 || '%'
+	`
+
+	_, err := s.db.Exec(context.Background(), query, userId, scope)
 	if err != nil {
 		return err
 	}
