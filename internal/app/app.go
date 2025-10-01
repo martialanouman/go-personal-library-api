@@ -16,6 +16,7 @@ type Application struct {
 	Db             *pgxpool.Pool
 	Logger         *log.Logger
 	UserHandler    api.UserHandler
+	TokenHandler   api.TokenHandler
 	AuthMiddleware middleware.AuthMiddleware
 }
 
@@ -28,11 +29,13 @@ func NewApplication() (*Application, error) {
 	}
 
 	userStore := store.NewPostgresUserStore(db)
+	tokenStore := store.NewPostgresTokenStore(db)
 
 	return &Application{
 		Logger:         logger,
 		Db:             db,
-		UserHandler:    api.NewUserHandler(userStore, store.NewPostgresTokenStore(db), logger),
+		UserHandler:    api.NewUserHandler(userStore, tokenStore, logger),
+		TokenHandler:   *api.NewTokenHandler(tokenStore, logger),
 		AuthMiddleware: middleware.AuthMiddleware{Store: userStore},
 	}, nil
 }
