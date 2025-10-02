@@ -151,7 +151,7 @@ func (s *PostgresUserStore) GetUserByToken(token, scope string) (*User, error) {
 		FROM users u
 		JOIN passwords p ON u.id = p.user_id
 		JOIN tokens t ON u.id = t.user_id
-		WHERE t.hash = $1 AND t.scope = $2 AND t.expiry > NOW()
+		WHERE t.hash = $1 AND t.scope LIKE '%' || $2 || '%' AND t.expiry > NOW()
 	`
 
 	hashedToken := sha256.Sum256([]byte(token))

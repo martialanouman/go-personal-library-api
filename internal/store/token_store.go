@@ -2,14 +2,18 @@ package store
 
 import (
 	"context"
+	"crypto/sha256"
+	"errors"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/martialanouman/personal-library/internal/utils"
 )
 
 const (
-	ScopeAuth = "auth"
+	ScopeAuth  = "auth"
+	ScopeBooks = "books"
 )
 
 type Token struct {
@@ -23,6 +27,7 @@ type Token struct {
 type TokenStore interface {
 	CreateToken(token *Token) error
 	RevokeAllTokens(userId, scope string) error
+	GetTokenByHash(plaintext string) (*Token, error)
 }
 
 type PostgresTokenStore struct {
@@ -44,7 +49,6 @@ func (s *PostgresTokenStore) CreateToken(token *Token) error {
 	token.Hash = genToken.Hash
 	token.Plaintext = genToken.Plaintext
 	token.Expiry = genToken.Expiry
-	token.Scope = ScopeAuth
 
 	query := `
 		INSERT INTO tokens (hash, user_id, expiry, scope)
@@ -71,4 +75,27 @@ func (s *PostgresTokenStore) RevokeAllTokens(userId, scope string) error {
 	}
 
 	return nil
+}
+
+func (s *PostgresTokenStore) GetTokenByHash(plaintext string) (*Token, error) {
+	token := &Token{}
+	hash := sha256.Sum256([]byte(plaintext))
+
+	query := `
+		SELECT user_id, scope, expiry, hash
+		FROM tokens
+		WHERE hash = $1
+	`
+
+	err := s.db.QueryRow(context.Background(), query, hash[:]).Scan(&token.UserId, &token.Scope, &token.Expiry, &token.Hash)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
 }
