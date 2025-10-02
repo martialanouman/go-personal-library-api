@@ -55,7 +55,7 @@ func (p *password) Matches(plaintext string) (bool, error) {
 type UserStore interface {
 	CreateUser(user *User) error
 	GetUserByEmail(email string) (*User, error)
-	GetUserByToken(token, scope string) (*User, error)
+	GetUserByToken(token string) (*User, error)
 	UpdatePassword(user *User) error
 }
 
@@ -141,7 +141,7 @@ func (s *PostgresUserStore) GetUserByEmail(email string) (*User, error) {
 	return user, nil
 }
 
-func (s *PostgresUserStore) GetUserByToken(token, scope string) (*User, error) {
+func (s *PostgresUserStore) GetUserByToken(token string) (*User, error) {
 	user := &User{
 		PasswordHash: password{},
 	}
@@ -151,12 +151,12 @@ func (s *PostgresUserStore) GetUserByToken(token, scope string) (*User, error) {
 		FROM users u
 		JOIN passwords p ON u.id = p.user_id
 		JOIN tokens t ON u.id = t.user_id
-		WHERE t.hash = $1 AND t.scope LIKE '%' || $2 || '%' AND t.expiry > NOW()
+		WHERE t.hash = $1 AND t.expiry > NOW()
 	`
 
 	hashedToken := sha256.Sum256([]byte(token))
 
-	err := s.db.QueryRow(context.Background(), query, hashedToken[:], scope).Scan(
+	err := s.db.QueryRow(context.Background(), query, hashedToken[:]).Scan(
 		&user.Id,
 		&user.Name,
 		&user.Email,

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"slices"
@@ -73,14 +74,14 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 		}
 
 		plaintextToken := headerParts[1]
-		user, err := m.UserStore.GetUserByToken(plaintextToken, store.ScopeAuth)
+		user, err := m.UserStore.GetUserByToken(plaintextToken)
 		if err != nil {
-			m.Logger.Printf("ERROR: getting user by token %v", err)
 			helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
 			return
 		}
 
 		if user == nil {
+			fmt.Printf("User not found")
 			helpers.WriteJson(w, http.StatusUnauthorized, helpers.Envelop{"error": "missing or invalid authorization header"})
 			return
 		}
