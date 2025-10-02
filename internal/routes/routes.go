@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/martialanouman/personal-library/internal/app"
+	"github.com/martialanouman/personal-library/internal/store"
 )
 
 func SetupRoutes(app *app.Application) *chi.Mux {
@@ -18,8 +19,8 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 			r.Group(func(r chi.Router) {
 				r.Use(app.AuthMiddleware.Authenticate)
 
-				r.Get("/me", app.AuthMiddleware.RequireUser(app.UserHandler.HandleMe))
-				r.Put("/password", app.AuthMiddleware.RequireUser(app.UserHandler.HandleUpdatePassword))
+				r.Get("/me", app.AuthMiddleware.RequireScope(app.UserHandler.HandleMe, []string{store.ScopeAuth}))
+				r.Put("/password", app.AuthMiddleware.RequireScope(app.UserHandler.HandleUpdatePassword, []string{store.ScopeAuth}))
 				r.Delete("/logout", app.AuthMiddleware.RequireUser(app.TokenHandler.HandleLogout))
 			})
 		})

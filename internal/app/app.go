@@ -36,7 +36,7 @@ func NewApplication() (*Application, error) {
 		Db:             db,
 		UserHandler:    api.NewUserHandler(userStore, tokenStore, logger),
 		TokenHandler:   *api.NewTokenHandler(tokenStore, logger),
-		AuthMiddleware: middleware.AuthMiddleware{Store: userStore},
+		AuthMiddleware: middleware.AuthMiddleware{UserStore: userStore, TokenStore: tokenStore, Logger: logger},
 	}, nil
 }
 
