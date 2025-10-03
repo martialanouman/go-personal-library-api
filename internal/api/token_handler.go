@@ -14,8 +14,8 @@ type TokenHandler struct {
 	logger *log.Logger
 }
 
-func NewTokenHandler(store store.TokenStore, logger *log.Logger) *TokenHandler {
-	return &TokenHandler{
+func NewTokenHandler(store store.TokenStore, logger *log.Logger) TokenHandler {
+	return TokenHandler{
 		store:  store,
 		logger: logger,
 	}
