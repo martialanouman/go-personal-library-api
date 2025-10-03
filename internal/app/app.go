@@ -15,9 +15,10 @@ import (
 type Application struct {
 	Db             *pgxpool.Pool
 	Logger         *log.Logger
+	AuthMiddleware middleware.AuthMiddleware
 	UserHandler    api.UserHandler
 	TokenHandler   api.TokenHandler
-	AuthMiddleware middleware.AuthMiddleware
+	BookHandler    api.BookHandler
 }
 
 func NewApplication() (*Application, error) {
@@ -30,13 +31,15 @@ func NewApplication() (*Application, error) {
 
 	userStore := store.NewPostgresUserStore(db)
 	tokenStore := store.NewPostgresTokenStore(db)
+	bookStore := store.NewPostgresBookStore(db)
 
 	return &Application{
 		Logger:         logger,
 		Db:             db,
+		AuthMiddleware: middleware.NewAuthMiddleware(userStore, tokenStore, logger),
 		UserHandler:    api.NewUserHandler(userStore, tokenStore, logger),
-		TokenHandler:   *api.NewTokenHandler(tokenStore, logger),
-		AuthMiddleware: middleware.AuthMiddleware{UserStore: userStore, TokenStore: tokenStore, Logger: logger},
+		TokenHandler:   api.NewTokenHandler(tokenStore, logger),
+		BookHandler:    api.NewBookHandler(bookStore, logger),
 	}, nil
 }
 
