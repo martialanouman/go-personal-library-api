@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -86,7 +87,20 @@ func (s *PostgresBookStore) GetBooks(userId string) ([]Book, error) {
 }
 
 func (s *PostgresBookStore) GetBookById(id string) (*Book, error) {
-	return nil, nil
+	var book *Book
+	const query = "SELECT * FROM books WHERE id = $1"
+
+	rows, _ := s.db.Query(context.Background(), query, id)
+	book, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByName[Book])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return book, nil
 }
 
 func (s *PostgresBookStore) UpdateBook(book *Book) error {

@@ -7,6 +7,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/martialanouman/personal-library/internal/helpers"
 	"github.com/martialanouman/personal-library/internal/middleware"
 	"github.com/martialanouman/personal-library/internal/store"
@@ -161,4 +162,26 @@ func (h *BookHandler) HandlerCreateBook(w http.ResponseWriter, r *http.Request) 
 	}
 
 	helpers.WriteJson(w, http.StatusCreated, helpers.Envelop{"book": book})
+}
+
+func (h *BookHandler) HandleGetBookById(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.Envelop{"error": "invalid book id"})
+		return
+	}
+
+	book, err := h.store.GetBookById(id)
+	if err != nil {
+		h.logger.Printf("ERROR: getting book by id %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	if book == nil {
+		helpers.WriteJson(w, http.StatusNotFound, helpers.Envelop{"error": "book not found"})
+		return
+	}
+
+	helpers.WriteJson(w, http.StatusOK, helpers.Envelop{"book": book})
 }
