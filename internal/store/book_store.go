@@ -104,9 +104,46 @@ func (s *PostgresBookStore) GetBookById(id string) (*Book, error) {
 }
 
 func (s *PostgresBookStore) UpdateBook(book *Book) error {
+	query := `
+		UPDATE books
+		SET title = $1, author = $2, isbn = $3, description = $4, cover_url = $5, genre = $6, status = $7, rating = $8, notes = $9, date_added = $10, date_started = $11, date_finished = $12, updated_at = NOW()
+		WHERE id = $13
+		RETURNING updated_at
+	`
+
+	err := s.db.QueryRow(
+		context.Background(), query,
+		book.Title,
+		book.Author,
+		book.Isbn,
+		book.Description,
+		book.CoverUrl,
+		book.Genre,
+		book.Status,
+		book.Rating,
+		book.Notes,
+		book.DateAdded,
+		book.DateStarted,
+		book.DateFinished,
+		book.Id,
+	).Scan(&book.UpdatedAt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *PostgresBookStore) DeleteBook(id string) error {
+	query := "DELETE FROM books WHERE id = $1"
+	commandTag, err := s.db.Exec(context.Background(), query, id)
+	if err != nil {
+		return err
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
 	return nil
 }

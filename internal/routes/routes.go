@@ -31,6 +31,8 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 			r.Get("/", app.AuthMiddleware.RequireScope(app.BookHandler.HandleGetBooks, []string{store.ScopeBooks}))
 			r.Post("/", app.AuthMiddleware.RequireScope(app.BookHandler.HandlerCreateBook, []string{store.ScopeBooks}))
 			r.Get("/{id}", app.AuthMiddleware.RequireScope(app.BookHandler.HandleGetBookById, []string{store.ScopeBooks}))
+			r.Put("/{id}", app.AuthMiddleware.RequireScope(app.BookHandler.HandleUpdateBook, []string{store.ScopeBooks}))
+			r.Delete("/{id}", app.AuthMiddleware.RequireScope(app.BookHandler.HandleDeleteBook, []string{store.ScopeBooks}))
 		})
 	})
 
