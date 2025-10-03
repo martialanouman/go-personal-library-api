@@ -1,0 +1,98 @@
+package store
+
+import (
+	"context"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+type Book struct {
+	Id           string     `json:"id" db:"id"`
+	UserId       string     `json:"user_id" db:"user_id"`
+	Title        string     `json:"title" db:"title"`
+	Author       string     `json:"author" db:"author"`
+	Isbn         *string    `json:"isbn,omitempty" db:"isbn"`
+	Description  *string    `json:"description,omitempty" db:"description"`
+	CoverUrl     *string    `json:"cover_url,omitempty" db:"cover_url"`
+	Genre        *string    `json:"genre,omitempty" db:"genre"`
+	Status       string     `json:"status" db:"status"`
+	Rating       byte       `json:"rating" db:"rating"`
+	Notes        *string    `json:"notes,omitempty" db:"notes"`
+	DateAdded    time.Time  `json:"date_added" db:"date_added"`
+	DateStarted  *time.Time `json:"date_started,omitempty" db:"date_started"`
+	DateFinished *time.Time `json:"date_finished,omitempty" db:"date_finished"`
+	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at" db:"updated_at"`
+}
+
+type BookStore interface {
+	CreateBook(book *Book) error
+	GetBooks(userId string) ([]Book, error)
+	GetBookById(id string) (*Book, error)
+	UpdateBook(book *Book) error
+	DeleteBook(id string) error
+}
+
+type PostgresBookStore struct {
+	db *pgxpool.Pool
+}
+
+func NewPostgresBookStore(db *pgxpool.Pool) *PostgresBookStore {
+	return &PostgresBookStore{db}
+}
+
+func (s *PostgresBookStore) CreateBook(book *Book) error {
+	query := `
+		INSERT INTO books (user_id, title, author, isbn, description, cover_url, genre, status, rating, notes, date_added, date_started, date_finished)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		RETURNING id, created_at, updated_at
+	`
+
+	err := s.db.QueryRow(
+		context.Background(), query,
+		book.UserId,
+		book.Title,
+		book.Author,
+		book.Isbn,
+		book.Description,
+		book.CoverUrl,
+		book.Genre,
+		book.Status,
+		book.Rating,
+		book.Notes,
+		book.DateAdded,
+		book.DateStarted,
+		book.DateFinished,
+	).Scan(&book.Id, &book.CreatedAt, &book.UpdatedAt)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *PostgresBookStore) GetBooks(userId string) ([]Book, error) {
+	query := "SELECT * FROM books WHERE user_id = $1"
+
+	rows, _ := s.db.Query(context.Background(), query, userId)
+	books, err := pgx.CollectRows(rows, pgx.RowToStructByName[Book])
+	if err != nil {
+		return nil, err
+	}
+
+	return books, nil
+}
+
+func (s *PostgresBookStore) GetBookById(id string) (*Book, error) {
+	return nil, nil
+}
+
+func (s *PostgresBookStore) UpdateBook(book *Book) error {
+	return nil
+}
+
+func (s *PostgresBookStore) DeleteBook(id string) error {
+	return nil
+}
