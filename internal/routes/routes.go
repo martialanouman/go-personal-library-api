@@ -24,6 +24,13 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 				r.Delete("/logout", app.AuthMiddleware.RequireUser(app.TokenHandler.HandleLogout))
 			})
 		})
+
+		r.Route("/books", func(r chi.Router) {
+			r.Use(app.AuthMiddleware.Authenticate)
+
+			r.Get("/", app.AuthMiddleware.RequireScope(app.BookHandler.HandleGetBooks, []string{store.ScopeBooks}))
+			r.Post("/", app.AuthMiddleware.RequireScope(app.BookHandler.HandlerCreateBook, []string{store.ScopeBooks}))
+		})
 	})
 
 	return r
