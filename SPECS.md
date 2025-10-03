@@ -93,7 +93,6 @@ POST   /api/books           # Add a book
 PUT    /api/books/{id}      # Edit a book
 DELETE /api/books/{id}      # Delete a book
 GET    /api/books/stats     # Personal statistics
-POST   /api/books/import    # Import by ISBN
 GET    /api/books/export    # Export library
 ```
 
