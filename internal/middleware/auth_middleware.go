@@ -13,9 +13,9 @@ import (
 )
 
 type AuthMiddleware struct {
-	UserStore  store.UserStore
-	TokenStore store.TokenStore
-	Logger     *log.Logger
+	userStore  store.UserStore
+	tokenStore store.TokenStore
+	logger     *log.Logger
 }
 
 type UserContextString string
@@ -56,6 +56,14 @@ func GetScope(r *http.Request) []string {
 	return strings.Split(token.Scope, ",")
 }
 
+func NewAuthMiddleware(userStore store.UserStore, tokenStore store.TokenStore, logger *log.Logger) AuthMiddleware {
+	return AuthMiddleware{
+		userStore,
+		tokenStore,
+		logger,
+	}
+}
+
 func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Authorization")
@@ -74,7 +82,7 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 		}
 
 		plaintextToken := headerParts[1]
-		user, err := m.UserStore.GetUserByToken(plaintextToken)
+		user, err := m.userStore.GetUserByToken(plaintextToken)
 		if err != nil {
 			helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
 			return
@@ -86,9 +94,9 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		token, err := m.TokenStore.GetTokenByHash(plaintextToken)
+		token, err := m.tokenStore.GetTokenByHash(plaintextToken)
 		if err != nil {
-			m.Logger.Printf("ERROR: getting token by hash %v", err)
+			m.logger.Printf("ERROR: getting token by hash %v", err)
 			helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
 			return
 		}
