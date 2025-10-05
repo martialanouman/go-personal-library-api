@@ -30,10 +30,11 @@ type Book struct {
 
 type BookStore interface {
 	CreateBook(book *Book) error
-	GetBooks(userId string) ([]Book, error)
+	GetBooks(userId string, page, take int) ([]Book, error)
 	GetBookById(id string) (*Book, error)
 	UpdateBook(book *Book) error
 	DeleteBook(id string) error
+	GetBooksCount(userId string) (int, error)
 }
 
 type PostgresBookStore struct {
@@ -74,10 +75,10 @@ func (s *PostgresBookStore) CreateBook(book *Book) error {
 	return nil
 }
 
-func (s *PostgresBookStore) GetBooks(userId string) ([]Book, error) {
-	query := "SELECT * FROM books WHERE user_id = $1"
+func (s *PostgresBookStore) GetBooks(userId string, page, take int) ([]Book, error) {
+	query := "SELECT * FROM books WHERE user_id = $1 LIMIT $2 OFFSET $3"
 
-	rows, _ := s.db.Query(context.Background(), query, userId)
+	rows, _ := s.db.Query(context.Background(), query, userId, take, (page-1)*take)
 	books, err := pgx.CollectRows(rows, pgx.RowToStructByName[Book])
 	if err != nil {
 		return nil, err
@@ -146,4 +147,17 @@ func (s *PostgresBookStore) DeleteBook(id string) error {
 	}
 
 	return nil
+}
+
+func (s *PostgresBookStore) GetBooksCount(userId string) (int, error) {
+	var count int
+
+	query := "SELECT COUNT(*) FROM books WHERE user_id = $1"
+	err := s.db.QueryRow(context.Background(), query, userId).Scan(&count)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
