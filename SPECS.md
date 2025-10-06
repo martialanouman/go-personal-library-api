@@ -21,13 +21,14 @@ Develop a RESTful API in Go allowing users to manage their personal book librari
 
 ### 2. **Book Management (Main Library)**
 
-- [ ] **Add a book** to library
-- [ ] **Edit information** of an existing book
-- [ ] **Delete a book** from library
-- [ ] **Mark as read/unread**
-- [ ] **Add a rating** (1-5 stars) and personal comment
-- [ ] **Set dates** (start and finish reading)
-- [ ] **Reading tracking** (in progress, to read, finished)
+- [x] **Add a book** to library
+- [ ] **Add by ISBN** and fetch additional informations
+- [x] **Edit information** of an existing book
+- [x] **Delete a book** from library
+- [x] **Mark as read/unread**
+- [x] **Add a rating** (1-5 stars) and personal comment
+- [x] **Set dates** (start and finish reading)
+- [x] **Reading tracking** (in progress, to read, finished)
 
 ### 3. **Wishlist Management**
 
