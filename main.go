@@ -1,14 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/martialanouman/personal-library/internal/app"
 	"github.com/martialanouman/personal-library/internal/routes"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		panic(fmt.Errorf("error loading .env file: %v", err))
+	}
+
+	
 	app, err := app.NewApplication()
 	if err != nil {
 		panic(err)
