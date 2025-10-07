@@ -9,6 +9,7 @@ import (
 	"github.com/martialanouman/personal-library/internal/api"
 	"github.com/martialanouman/personal-library/internal/helpers"
 	"github.com/martialanouman/personal-library/internal/middleware"
+	"github.com/martialanouman/personal-library/internal/services"
 	"github.com/martialanouman/personal-library/internal/store"
 )
 
@@ -33,6 +34,7 @@ func NewApplication() (*Application, error) {
 	userStore := store.NewPostgresUserStore(db)
 	tokenStore := store.NewPostgresTokenStore(db)
 	bookStore := store.NewPostgresBookStore(db)
+	bookApi := services.NewBookAPIService(logger)
 
 	return &Application{
 		Logger:          logger,
@@ -41,7 +43,7 @@ func NewApplication() (*Application, error) {
 		UtilsMiddleware: middleware.NewUtilsMiddleware(),
 		UserHandler:     api.NewUserHandler(userStore, tokenStore, logger),
 		TokenHandler:    api.NewTokenHandler(tokenStore, logger),
-		BookHandler:     api.NewBookHandler(bookStore, logger),
+		BookHandler:     api.NewBookHandler(bookStore, bookApi, logger),
 	}, nil
 }
 

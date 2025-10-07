@@ -10,12 +10,14 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/martialanouman/personal-library/internal/helpers"
 	"github.com/martialanouman/personal-library/internal/middleware"
+	"github.com/martialanouman/personal-library/internal/services"
 	"github.com/martialanouman/personal-library/internal/store"
 )
 
 type BookHandler struct {
-	store  store.BookStore
-	logger *log.Logger
+	store   store.BookStore
+	bookApi *services.BookAPIClient
+	logger  *log.Logger
 }
 
 type createBookRequest struct {
@@ -232,8 +234,8 @@ func (r *updateBookRequest) toBook(book *store.Book) *store.Book {
 	return book
 }
 
-func NewBookHandler(store store.BookStore, logger *log.Logger) BookHandler {
-	return BookHandler{store: store, logger: logger}
+func NewBookHandler(store store.BookStore, bookApi *services.BookAPIClient, logger *log.Logger) BookHandler {
+	return BookHandler{store: store, bookApi: bookApi, logger: logger}
 }
 
 func (h *BookHandler) HandleGetBooks(w http.ResponseWriter, r *http.Request) {
@@ -397,4 +399,43 @@ func (h *BookHandler) HandleDeleteBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *BookHandler) HandleAddBookByISBN(w http.ResponseWriter, r *http.Request) {
+	bbId := chi.URLParam(r, "bbId")
+	if bbId == "" {
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.Envelop{"error": "invalid isbn"})
+		return
+	}
+
+	bookInfo, err := h.bookApi.GetBookByBigBookId(bbId)
+	if err != nil {
+		h.logger.Printf("ERROR: fetching book info from external API %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	user := middleware.GetUser(r)
+	rating := int(bookInfo.Rating.Average * 5)
+
+	book := store.Book{
+		Title:       bookInfo.Title,
+		UserId:      user.Id,
+		Author:      bookInfo.Authors[0].Name,
+		Isbn:        &bookInfo.Identifiers.Isbn13,
+		CoverUrl:    &bookInfo.Image,
+		Description: &bookInfo.Description,
+		Status:      "to_read",
+		Rating:      byte(rating),
+		DateAdded:   time.Now(),
+	}
+
+	err = h.store.CreateBook(&book)
+	if err != nil {
+		h.logger.Printf("ERROR: creating book %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	helpers.WriteJson(w, http.StatusCreated, helpers.Envelop{"book": book})
 }
