@@ -31,10 +31,15 @@ func NewApplication() (*Application, error) {
 		return nil, err
 	}
 
+	bookApi, err := services.NewBookAPIService(logger)
+	if err != nil {
+		return nil, err
+	}
+
 	userStore := store.NewPostgresUserStore(db)
 	tokenStore := store.NewPostgresTokenStore(db)
 	bookStore := store.NewPostgresBookStore(db)
-	bookApi := services.NewBookAPIService(logger)
+	
 
 	return &Application{
 		Logger:          logger,

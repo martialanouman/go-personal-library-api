@@ -408,7 +408,7 @@ func (h *BookHandler) HandleAddBookByISBN(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	bookInfo, err := h.bookApi.GetBookByBigBookId(bbId)
+	bookInfo, err := h.bookApi.GetBookByBigBookId(r.Context(), bbId)
 	if err != nil {
 		h.logger.Printf("ERROR: fetching book info from external API %v", err)
 		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
