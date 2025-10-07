@@ -22,7 +22,7 @@ Develop a RESTful API in Go allowing users to manage their personal book librari
 ### 2. **Book Management (Main Library)**
 
 - [x] **Add a book** to library
-- [ ] **Add by ISBN** and fetch additional informations
+- [x] **Add by Big Book Id** and fetch additional informations
 - [x] **Edit information** of an existing book
 - [x] **Delete a book** from library
 - [x] **Mark as read/unread**
@@ -88,25 +88,26 @@ PUT  /api/auth/password     # Change password
 ### Book Management (Library)
 
 ```
-GET    /api/books           # List with filters/pagination
-GET    /api/books/{id}      # Book details
-POST   /api/books           # Add a book
-PUT    /api/books/{id}      # Edit a book
-DELETE /api/books/{id}      # Delete a book
-GET    /api/books/stats     # Personal statistics
-GET    /api/books/export    # Export library
+GET    /api/books                   # List with filters/pagination
+GET    /api/books/{id}              # Book details
+POST   /api/books                   # Add a book
+PUT    /api/books/{id}              # Edit a book
+DELETE /api/books/{id}              # Delete a book
+GET    /api/books/stats             # Personal statistics
+GET    /api/books/export            # Export library
+GET    /api/books/import/{bbId}     # Export library
 ```
 
 ### Wishlist Management
 
 ```
-GET    /api/wishlist        # List wishes with filters
-GET    /api/wishlist/{id}   # Wish details
-POST   /api/wishlist        # Add a book to wishlist
-PUT    /api/wishlist/{id}   # Edit a wish (priority, notes)
-DELETE /api/wishlist/{id}   # Remove a book from wishlist
-POST   /api/wishlist/{id}/move-to-books  # Move to library
-GET    /api/wishlist/stats  # Wishlist statistics
+GET    /api/wishlist                      # List wishes with filters
+GET    /api/wishlist/{id}                 # Wish details
+POST   /api/wishlist                      # Add a book to wishlist
+PUT    /api/wishlist/{id}                 # Edit a wish (priority, notes)
+DELETE /api/wishlist/{id}                 # Remove a book from wishlist
+POST   /api/wishlist/{id}/move-to-books   # Move to library
+GET    /api/wishlist/stats                # Wishlist statistics
 ```
 
 ## 💾 Database
