@@ -10,7 +10,7 @@ import (
 )
 
 type Book struct {
-	Id           string     `json:"id" db:"id"`
+	ID           string     `json:"id" db:"id"`
 	UserId       string     `json:"user_id" db:"user_id"`
 	Title        string     `json:"title" db:"title"`
 	Author       string     `json:"author" db:"author"`
@@ -67,7 +67,7 @@ func (s *PostgresBookStore) CreateBook(book *Book) error {
 		book.DateAdded,
 		book.DateStarted,
 		book.DateFinished,
-	).Scan(&book.Id, &book.CreatedAt, &book.UpdatedAt)
+	).Scan(&book.ID, &book.CreatedAt, &book.UpdatedAt)
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func (s *PostgresBookStore) UpdateBook(book *Book) error {
 		book.DateAdded,
 		book.DateStarted,
 		book.DateFinished,
-		book.Id,
+		book.ID,
 	).Scan(&book.UpdatedAt)
 	if err != nil {
 		return err

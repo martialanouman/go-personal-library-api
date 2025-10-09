@@ -17,7 +17,7 @@ type password struct {
 }
 
 type User struct {
-	Id           string    `json:"id"`
+	ID           string    `json:"id"`
 	Email        string    `json:"email"`
 	PasswordHash password  `json:"-"`
 	Name         string    `json:"name"`
@@ -85,7 +85,7 @@ func (s *PostgresUserStore) CreateUser(user *User) error {
 	err = s.db.QueryRow(
 		ctx, userInsertQuery, user.Email, user.Name,
 	).Scan(
-		&user.Id, &user.CreatedAt, &user.UpdatedAt,
+		&user.ID, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return err
@@ -96,7 +96,7 @@ func (s *PostgresUserStore) CreateUser(user *User) error {
 		VALUES ($1, $2)
 	`
 
-	_, err = s.db.Exec(ctx, passwordInsertQuery, user.Id, user.PasswordHash.hash)
+	_, err = s.db.Exec(ctx, passwordInsertQuery, user.ID, user.PasswordHash.hash)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (s *PostgresUserStore) GetUserByEmail(email string) (*User, error) {
 	`
 
 	err := s.db.QueryRow(context.Background(), query, email).Scan(
-		&user.Id,
+		&user.ID,
 		&user.Name,
 		&user.Email,
 		&user.PasswordHash.hash,
@@ -157,7 +157,7 @@ func (s *PostgresUserStore) GetUserByToken(token string) (*User, error) {
 	hashedToken := sha256.Sum256([]byte(token))
 
 	err := s.db.QueryRow(context.Background(), query, hashedToken[:]).Scan(
-		&user.Id,
+		&user.ID,
 		&user.Name,
 		&user.Email,
 		&user.CreatedAt,
@@ -183,7 +183,7 @@ func (s *PostgresUserStore) UpdatePassword(user *User) error {
 		WHERE user_id = $2
 	`
 
-	_, err := s.db.Exec(context.Background(), query, user.PasswordHash.hash, user.Id)
+	_, err := s.db.Exec(context.Background(), query, user.PasswordHash.hash, user.ID)
 	if err != nil {
 		return err
 	}

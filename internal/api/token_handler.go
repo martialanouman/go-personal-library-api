@@ -24,7 +24,7 @@ func NewTokenHandler(store store.TokenStore, logger *log.Logger) TokenHandler {
 func (h *TokenHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUser(r)
 
-	err := h.store.RevokeAllTokens(user.Id, store.ScopeAuth)
+	err := h.store.RevokeAllTokens(user.ID, store.ScopeAuth)
 	if err != nil {
 		h.logger.Printf("ERROR: revoking token %v", err)
 		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})

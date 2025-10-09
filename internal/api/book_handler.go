@@ -242,14 +242,14 @@ func (h *BookHandler) HandleGetBooks(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUser(r)
 	pagination := middleware.GetPagination(r)
 
-	books, err := h.store.GetBooks(user.Id, pagination.Page, pagination.Take)
+	books, err := h.store.GetBooks(user.ID, pagination.Page, pagination.Take)
 	if err != nil {
 		h.logger.Printf("ERROR: getting books %v", err)
 		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
 		return
 	}
 
-	count, err := h.store.GetBooksCount(user.Id)
+	count, err := h.store.GetBooksCount(user.ID)
 	if err != nil {
 		h.logger.Printf("ERROR: getting books count %v", err)
 		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
@@ -275,7 +275,7 @@ func (h *BookHandler) HandlerCreateBook(w http.ResponseWriter, r *http.Request) 
 
 	user := middleware.GetUser(r)
 	book := req.toBook()
-	book.UserId = user.Id
+	book.UserId = user.ID
 
 	if err := h.store.CreateBook(book); err != nil {
 		h.logger.Printf("ERROR: creating book %v", err)
@@ -420,7 +420,7 @@ func (h *BookHandler) HandleAddBookByISBN(w http.ResponseWriter, r *http.Request
 
 	book := store.Book{
 		Title:       bookInfo.Title,
-		UserId:      user.Id,
+		UserId:      user.ID,
 		Author:      bookInfo.Authors[0].Name,
 		Isbn:        &bookInfo.Identifiers.Isbn13,
 		CoverUrl:    &bookInfo.Image,
