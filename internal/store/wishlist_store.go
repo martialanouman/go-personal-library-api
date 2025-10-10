@@ -10,6 +10,7 @@ import (
 
 type Wish struct {
 	ID        string    `json:"id" db:"id"`
+	UserID    string    `json:"user_id" db:"user_id"`
 	Title     string    `json:"title" db:"title"`
 	Author    *string   `json:"author,omitempty" db:"author"`
 	Isbn      *string   `json:"isbn,omitempty" db:"isbn"`
@@ -23,35 +24,36 @@ type Wish struct {
 type WishlistStore interface {
 	AddWish(wish *Wish) error
 	GetWishById(id string) (*Wish, error)
-	DeleteWish(id string) error
-	MarkAsAcquired(id string) error
+	DeleteWishById(id string) error
+	MarkAsAcquiredById(id string) error
 }
 
 type PostgresWishlistStore struct {
 	db *pgxpool.Pool
 }
 
-func NewPostgresWishlistStore(db *pgxpool.Pool) *PostgresBookStore {
-	return &PostgresBookStore{db}
+func NewPostgresWishlistStore(db *pgxpool.Pool) *PostgresWishlistStore {
+	return &PostgresWishlistStore{db}
 }
 
 func (s *PostgresWishlistStore) AddWish(wish *Wish) error {
 
 	query := `
-		INSERT INTO wishlists (title, author, isbn, big_book_id, priority, notes)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO wishlists (user_id, title, author, isbn, big_book_id, priority, notes)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, created_at
 	`
 
 	err := s.db.QueryRow(context.Background(),
 		query,
+		wish.UserID,
 		wish.Title,
 		wish.Author,
 		wish.Isbn,
 		wish.BigBookID,
 		wish.Priority,
 		wish.Notes,
-	).Scan(&wish.ID, wish.CreatedAt)
+	).Scan(&wish.ID, &wish.CreatedAt)
 	if err != nil {
 		return err
 	}
@@ -75,7 +77,7 @@ func (s *PostgresWishlistStore) GetWishById(id string) (*Wish, error) {
 	return wish, nil
 }
 
-func (s *PostgresWishlistStore) DeleteWish(id string) error {
+func (s *PostgresWishlistStore) DeleteWishById(id string) error {
 	query := `DELETE FROM wishlists WHERE id = $1`
 
 	_, err := s.db.Exec(context.Background(), query, id)
@@ -87,7 +89,7 @@ func (s *PostgresWishlistStore) DeleteWish(id string) error {
 	return nil
 }
 
-func (s *PostgresWishlistStore) MarkAsAcquired(id string) error {
+func (s *PostgresWishlistStore) MarkAsAcquiredById(id string) error {
 	query := `
 		UPDATE wishlists 
 		SET (acquired = TRUE, updated_at = NOW()) 

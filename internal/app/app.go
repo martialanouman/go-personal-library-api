@@ -21,6 +21,7 @@ type Application struct {
 	UserHandler     api.UserHandler
 	TokenHandler    api.TokenHandler
 	BookHandler     api.BookHandler
+	WishlistHandler api.WishlistHandler
 }
 
 func NewApplication() (*Application, error) {
@@ -39,7 +40,7 @@ func NewApplication() (*Application, error) {
 	userStore := store.NewPostgresUserStore(db)
 	tokenStore := store.NewPostgresTokenStore(db)
 	bookStore := store.NewPostgresBookStore(db)
-	
+	wishlistStore := store.NewPostgresWishlistStore(db)
 
 	return &Application{
 		Logger:          logger,
@@ -49,6 +50,7 @@ func NewApplication() (*Application, error) {
 		UserHandler:     api.NewUserHandler(userStore, tokenStore, logger),
 		TokenHandler:    api.NewTokenHandler(tokenStore, logger),
 		BookHandler:     api.NewBookHandler(bookStore, bookApi, logger),
+		WishlistHandler: api.NewWishlistHandler(wishlistStore, logger),
 	}, nil
 }
 

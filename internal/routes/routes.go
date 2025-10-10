@@ -35,6 +35,12 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 			r.Put("/{id}", app.AuthMiddleware.RequireScope(app.BookHandler.HandleUpdateBook, []string{store.ScopeBooks}))
 			r.Delete("/{id}", app.AuthMiddleware.RequireScope(app.BookHandler.HandleDeleteBook, []string{store.ScopeBooks}))
 		})
+
+		r.Route("/wishes", func (r chi.Router) {
+			r.Use(app.AuthMiddleware.Authenticate)
+
+			r.Post("/", app.AuthMiddleware.RequireScope(app.WishlistHandler.HandleAddWish, []string{"wishlist"}))
+		})
 	})
 
 	return r
