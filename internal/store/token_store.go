@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	ScopeAuth  = "auth"
-	ScopeBooks = "books"
+	ScopeAuth     = "auth"
+	ScopeBooks    = "books"
+	ScopeWishlist = "wishlist"
 )
 
 type Token struct {

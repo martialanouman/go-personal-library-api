@@ -183,7 +183,7 @@ func (h *UserHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := &store.Token{UserId: user.ID, Scope: strings.Join([]string{store.ScopeAuth, store.ScopeBooks}, ",")}
+	token := &store.Token{UserId: user.ID, Scope: strings.Join([]string{store.ScopeAuth, store.ScopeBooks, store.ScopeWishlist}, ",")}
 	if err := h.tokenStore.CreateToken(token); err != nil {
 		h.logger.Printf("ERROR: creating token %v", err)
 		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
