@@ -145,7 +145,7 @@ func (h *WishlistHandler) HandleMarkAsAcquired(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if err := h.store.MarkAsAcquiredById(wishID); err != nil {
+	if err := h.store.MarkAsAcquired(wishID); err != nil {
 		h.logger.Printf("ERROR: mark as acquired wish %v", err)
 		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
 		return
@@ -158,14 +158,14 @@ func (h *WishlistHandler) HandleGetWishes(w http.ResponseWriter, r *http.Request
 	user := middleware.GetUser(r)
 	pagination := middleware.GetPagination(r)
 
-	wishes, err := h.store.GetWishesByUserId(user.ID, pagination.Page, pagination.Take)
+	wishes, err := h.store.GetWishes(user.ID, pagination.Page, pagination.Take)
 	if err != nil {
 		h.logger.Printf("ERROR: getting wishes %v", err)
 		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
 		return
 	}
 
-	count, err := h.store.GetWishesCountByUserId(user.ID)
+	count, err := h.store.GetWishesCount(user.ID)
 	if err != nil {
 		h.logger.Printf("ERROR: getting wishes count %v", err)
 		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})

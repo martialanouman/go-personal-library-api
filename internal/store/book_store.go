@@ -76,7 +76,7 @@ func (s *PostgresBookStore) CreateBook(book *Book) error {
 }
 
 func (s *PostgresBookStore) GetBooks(userId string, page, take int) ([]Book, error) {
-	query := "SELECT * FROM books WHERE user_id = $1 LIMIT $2 OFFSET $3"
+	query := "SELECT * FROM books WHERE user_id = $1 LIMIT $2 OFFSET $3 ORDER BY created_at DESC"
 
 	rows, _ := s.db.Query(context.Background(), query, userId, take, (page-1)*take)
 	books, err := pgx.CollectRows(rows, pgx.RowToStructByName[Book])

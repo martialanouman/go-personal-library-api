@@ -25,10 +25,10 @@ type Wish struct {
 type WishlistStore interface {
 	AddWish(wish *Wish) error
 	GetWishById(id string) (*Wish, error)
-	GetWishesByUserId(userId string, page, take int) ([]Wish, error)
+	GetWishes(userId string, page, take int) ([]Wish, error)
 	DeleteWishById(id string) error
-	MarkAsAcquiredById(id string) error
-	GetWishesCountByUserId(userId string) (int, error)
+	MarkAsAcquired(id string) error
+	GetWishesCount(userId string) (int, error)
 }
 
 type PostgresWishlistStore struct {
@@ -92,7 +92,7 @@ func (s *PostgresWishlistStore) DeleteWishById(id string) error {
 	return nil
 }
 
-func (s *PostgresWishlistStore) GetWishesByUserId(userId string, page, take int) ([]Wish, error) {
+func (s *PostgresWishlistStore) GetWishes(userId string, page, take int) ([]Wish, error) {
 	query := `
 		SELECT * 
 		FROM wishlists 
@@ -114,7 +114,7 @@ func (s *PostgresWishlistStore) GetWishesByUserId(userId string, page, take int)
 	return wishes, nil
 }
 
-func (s *PostgresWishlistStore) GetWishesCountByUserId(userId string) (int, error) {
+func (s *PostgresWishlistStore) GetWishesCount(userId string) (int, error) {
 	query := "SELECT COUNT(*) FROM wishlists WHERE user_id = $1 AND acquired = FALSE"
 
 	var count int
@@ -126,7 +126,7 @@ func (s *PostgresWishlistStore) GetWishesCountByUserId(userId string) (int, erro
 	return count, nil
 }
 
-func (s *PostgresWishlistStore) MarkAsAcquiredById(id string) error {
+func (s *PostgresWishlistStore) MarkAsAcquired(id string) error {
 	ctx := context.Background()
 
 	trx, err := s.db.Begin(ctx)
