@@ -153,16 +153,16 @@ func (s *PostgresWishlistStore) MarkAsAcquiredById(id string) error {
 		return err
 	}
 
-	if wish.Acquired {
+	if !wish.Acquired {
 		return nil
 	}
 
 	insertBookQuery := `
-		INSERT INTO books (user_id, title, author, isbn)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO books (user_id, title, author, isbn, notes, rating)
+		VALUES ($1, $2, $3, $4, $5, 1)
 	`
 
-	_, err = trx.Exec(ctx, insertBookQuery, wish.UserID, wish.Title, wish.Author, wish.Isbn)
+	_, err = trx.Exec(ctx, insertBookQuery, wish.UserID, wish.Title, wish.Author, wish.Isbn, wish.Notes)
 	if err != nil {
 		return err
 	}
