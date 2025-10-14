@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"slices"
@@ -89,7 +88,6 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 		}
 
 		if user == nil {
-			fmt.Printf("User not found")
 			helpers.WriteJson(w, http.StatusUnauthorized, helpers.Envelop{"error": "missing or invalid authorization header"})
 			return
 		}
