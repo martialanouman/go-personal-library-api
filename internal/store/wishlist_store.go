@@ -19,6 +19,7 @@ type Wish struct {
 	Acquired  bool      `json:"acquired" db:"acquired"`
 	Notes     *string   `json:"notes" db:"notes"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type WishlistStore interface {
@@ -90,13 +91,47 @@ func (s *PostgresWishlistStore) DeleteWishById(id string) error {
 }
 
 func (s *PostgresWishlistStore) MarkAsAcquiredById(id string) error {
+	ctx := context.Background()
+
+	trx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer trx.Rollback(ctx)
+
 	query := `
 		UPDATE wishlists 
-		SET (acquired = TRUE, updated_at = NOW()) 
+		SET acquired = TRUE, updated_at = NOW()
 		WHERE id = $1
+		RETURNING *
 	`
 
-	_, err := s.db.Exec(context.Background(), query, id)
+	rows, err := trx.Query(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	wish, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Wish])
+	if err != nil {
+		return err
+	}
+
+	if wish.Acquired {
+		return nil
+	}
+
+	insertBookQuery := `
+		INSERT INTO books (user_id, title, author, isbn)
+		VALUES ($1, $2, $3, $4)
+	`
+
+	_, err = trx.Exec(ctx, insertBookQuery, wish.UserID, wish.Title, wish.Author, wish.Isbn)
+	if err != nil {
+		return err
+	}
+
+	err = trx.Commit(ctx)
 	if err != nil {
 		return err
 	}

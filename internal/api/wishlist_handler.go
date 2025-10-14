@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/martialanouman/personal-library/internal/helpers"
 	"github.com/martialanouman/personal-library/internal/middleware"
 	"github.com/martialanouman/personal-library/internal/store"
@@ -96,9 +97,59 @@ func (h *WishlistHandler) HandleAddWish(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *WishlistHandler) HandleDeleteWish(w http.ResponseWriter, r *http.Request) {
+	wishID := chi.URLParam(r, "id")
+	if wishID == "" {
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.Envelop{"error": "invalid wish id"})
+		return
+	}
 
+	user := middleware.GetUser(r)
+	wish, err := h.store.GetWishById(wishID)
+	if err != nil {
+		h.logger.Printf("ERROR: getting wish %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	if user.ID != wish.UserID {
+		helpers.WriteJson(w, http.StatusForbidden, helpers.Envelop{"error": "you are not allowed to perform this action on this resource"})
+		return
+	}
+
+	if err := h.store.DeleteWishById(wish.ID); err != nil {
+		h.logger.Printf("ERROR: deleting wish %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *WishlistHandler) HandleMarkAsAcquired(w http.ResponseWriter, r *http.Request) {
+	wishID := chi.URLParam(r, "id")
+	if wishID == "" {
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.Envelop{"error": "invalid wish id"})
+		return
+	}
 
+	user := middleware.GetUser(r)
+	wish, err := h.store.GetWishById(wishID)
+	if err != nil {
+		h.logger.Printf("ERROR: getting wish %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	if user.ID != wish.UserID {
+		helpers.WriteJson(w, http.StatusForbidden, helpers.Envelop{"error": "you are not allowed to perform this action on this resource"})
+		return
+	}
+
+	if err := h.store.MarkAsAcquiredById(wishID); err != nil {
+		h.logger.Printf("ERROR: mark as acquired wish %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
