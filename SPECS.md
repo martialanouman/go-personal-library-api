@@ -32,17 +32,17 @@ Develop a RESTful API in Go allowing users to manage their personal book librari
 
 ### 3. **Wishlist Management**
 
-- [ ] **Add a book** to wishlist
-- [ ] **Remove a book** from wishlist
-- [ ] **Move a book** from wishlist to main library
-- [ ] **Prioritize wishes** with priority level (low, medium, high)
-- [ ] **Add notes** on why this book is wanted
-- [ ] **Mark as acquired** when added to library
+- [x] **Add a book** to wishlist
+- [x] **Remove a book** from wishlist
+- [x] **Move a book** from wishlist to main library
+- [x] **Prioritize wishes** with priority level (low, medium, high)
+- [x] **Add notes** on why this book is wanted
+- [x] **Mark as acquired** when added to library
 
 ### 4. **Search and Filtering**
 
-- [ ] **List all books** with pagination
-- [ ] **List wishlist** with pagination
+- [x] **List all books** with pagination
+- [x] **List wishlist** with pagination
 - [ ] **Text search** by title and author (in library AND wishlist)
 - [ ] **Filter by reading status** (to read, in progress, finished)
 - [ ] **Filter by rating** (1 to 5 stars)
@@ -65,8 +65,7 @@ Develop a RESTful API in Go allowing users to manage their personal book librari
 
 ## 🔐 Security and Authentication
 
-- **JWT tokens** with short expiration (15-30 minutes)
-- **Refresh tokens** to maintain session
+- **Bearer tokens** with short 24h expiration
 - **Password hashing** with bcrypt
 - **Authentication middleware** on all protected routes
 - **Strict validation** of input data
@@ -122,7 +121,7 @@ GET    /api/wishlist/stats                # Wishlist statistics
 
 - **Language**: Go (with web framework like Gin or Echo)
 - **Database**: PostgreSQL
-- **Authentication**: JWT
+- **Authentication**: Bearer Token
 - **API**: RESTful JSON
 - **Separation**: strict data separation by user
 - **Error handling**: appropriate with meaningful HTTP codes
