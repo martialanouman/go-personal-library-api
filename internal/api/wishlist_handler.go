@@ -153,3 +153,27 @@ func (h *WishlistHandler) HandleMarkAsAcquired(w http.ResponseWriter, r *http.Re
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (h *WishlistHandler) HandleGetWishes(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUser(r)
+	pagination := middleware.GetPagination(r)
+
+	wishes, err := h.store.GetWishesByUserId(user.ID, pagination.Page, pagination.Take)
+	if err != nil {
+		h.logger.Printf("ERROR: getting wishes %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	count, err := h.store.GetWishesCountByUserId(user.ID)
+	if err != nil {
+		h.logger.Printf("ERROR: getting wishes count %v", err)
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.Envelop{"error": "internal server error"})
+		return
+	}
+
+	helpers.WriteJson(
+		w, http.StatusOK,
+		helpers.Envelop{"wishes": wishes, "page": pagination.Page, "take": pagination.Take, "count": count},
+	)
+}

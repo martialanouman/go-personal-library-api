@@ -42,6 +42,7 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 			r.Post("/", app.AuthMiddleware.RequireScope(app.WishlistHandler.HandleAddWish, []string{"wishlist"}))
 			r.Delete("/{id}", app.AuthMiddleware.RequireScope(app.WishlistHandler.HandleDeleteWish, []string{"wishlist"}))
 			r.Put("/{id}/acquire", app.AuthMiddleware.RequireScope(app.WishlistHandler.HandleMarkAsAcquired, []string{"wishlist"}))
+			r.With(app.UtilsMiddleware.GetPagination).Get("/", app.AuthMiddleware.RequireScope(app.WishlistHandler.HandleGetWishes, []string{store.ScopeWishlist}))
 		})
 	})
 
